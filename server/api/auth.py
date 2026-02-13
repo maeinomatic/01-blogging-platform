@@ -47,7 +47,6 @@ async def login(form_data: UserCreate, request: Request, db: AsyncSession = Depe
     if needs_rehash(user.password_hash):
         user.password_hash = get_password_hash(form_data.password)
         db.add(user)
-        await db.commit()
 
     # create tokens
     access = create_access_token(str(user.id))
@@ -63,15 +62,18 @@ async def login(form_data: UserCreate, request: Request, db: AsyncSession = Depe
     return {"access_token": access, "refresh_token": refresh, "token_type": "bearer"}
 
 
-class _RefreshIn(SQLModel):
+class RefreshTokenRequest(SQLModel):
     refresh_token: str
 
 
 @router.post("/refresh")
-async def refresh_token(payload: _RefreshIn, db: AsyncSession = Depends(get_db)):
+async def refresh_token(payload: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
     # verify token signature & expiry
     data = decode_token(payload.refresh_token)
     if not data or "sub" not in data:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    # ensure this is actually a refresh token, not an access token
+    if data.get("typ") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     user_id = data["sub"]
@@ -98,17 +100,31 @@ async def refresh_token(payload: _RefreshIn, db: AsyncSession = Depends(get_db))
     return {"access_token": access, "refresh_token": new_refresh, "token_type": "bearer"}
 
 
-class _RevokeIn(SQLModel):
+class LogoutRequest(SQLModel):
     refresh_token: str | None = None
     revoke_all: bool | None = False
 
 
 @router.post("/logout")
-async def logout(payload: _RevokeIn, db: AsyncSession = Depends(get_db)):
+async def logout(payload: LogoutRequest, db: AsyncSession = Depends(get_db)):
     # revoke a single refresh token or all tokens for the user
     if payload.revoke_all:
         # require refresh_token to identify user
-        raise HTTPException(status_code=400, detail="revoke_all requires a refresh_token to identify the user")
+        if not payload.refresh_token:
+            raise HTTPException(status_code=400, detail="revoke_all requires a refresh_token to identify the user")
+
+        data = decode_token(payload.refresh_token)
+        if not data or "sub" not in data:
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+        user_id = data["sub"]
+        q = select(RefreshToken).where(RefreshToken.user_id == user_id)
+        result = await db.exec(q)
+        tokens = result.all()
+        for token in tokens:
+            token.revoked = True
+        await db.commit()
+        return {"ok": True}
 
     if payload.refresh_token:
         data = decode_token(payload.refresh_token)
