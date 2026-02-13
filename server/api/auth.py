@@ -8,7 +8,7 @@ from ..core.security import get_password_hash, verify_password, create_access_to
 from ..models.user import User, UserCreate
 from ..models.refresh_token import RefreshToken
 from ..core.config import settings
-
+from sqlmodel import SQLModel
 import hashlib
 from datetime import datetime, timedelta
 
