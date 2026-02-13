@@ -258,7 +258,7 @@ Once the server is running, access:
 
 ## Notes for Copilot
 
-- This is an active development project with ongoing implementation
+- This is an active development project
 - Frontend (React) is planned but not yet implemented
 - Focus on backend API development with FastAPI and SQLModel
 - Database schema follows the design outlined in PLAN.md
