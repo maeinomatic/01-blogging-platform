@@ -20,6 +20,17 @@ async def get_db():
         yield session
 
 
+def validate_refresh_token(token: str) -> str:
+    """Validate a refresh token and return the user_id.
+    
+    Raises HTTPException if the token is invalid.
+    """
+    data = decode_token(token)
+    if not data or "sub" not in data or data.get("typ") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    return data["sub"]
+
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     q = select(User).where(User.email == user_in.email)
@@ -68,15 +79,8 @@ class RefreshTokenRequest(SQLModel):
 
 @router.post("/refresh")
 async def refresh_token(payload: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
-    # verify token signature & expiry
-    data = decode_token(payload.refresh_token)
-    if not data or "sub" not in data:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-    # ensure this is actually a refresh token, not an access token
-    if data.get("typ") != "refresh":
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-
-    user_id = data["sub"]
+    # verify token signature, expiry, and type
+    user_id = validate_refresh_token(payload.refresh_token)
     token_hash = hashlib.sha256(payload.refresh_token.encode()).hexdigest()
 
     q = select(RefreshToken).where(RefreshToken.token_hash == token_hash)
@@ -113,11 +117,7 @@ async def logout(payload: LogoutRequest, db: AsyncSession = Depends(get_db)):
         if not payload.refresh_token:
             raise HTTPException(status_code=400, detail="revoke_all requires a refresh_token to identify the user")
 
-        data = decode_token(payload.refresh_token)
-        if not data or "sub" not in data:
-            raise HTTPException(status_code=401, detail="Invalid refresh token")
-
-        user_id = data["sub"]
+        user_id = validate_refresh_token(payload.refresh_token)
         q = select(RefreshToken).where(RefreshToken.user_id == user_id)
         result = await db.exec(q)
         tokens = result.all()
@@ -127,9 +127,7 @@ async def logout(payload: LogoutRequest, db: AsyncSession = Depends(get_db)):
         return {"ok": True}
 
     if payload.refresh_token:
-        data = decode_token(payload.refresh_token)
-        if not data or "sub" not in data:
-            raise HTTPException(status_code=401, detail="Invalid refresh token")
+        user_id = validate_refresh_token(payload.refresh_token)
         token_hash = hashlib.sha256(payload.refresh_token.encode()).hexdigest()
         q = select(RefreshToken).where(RefreshToken.token_hash == token_hash)
         result = await db.exec(q)
