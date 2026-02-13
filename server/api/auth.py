@@ -41,6 +41,14 @@ async def login(form_data: UserCreate, request: Request, db: AsyncSession = Depe
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    # If hash needs upgrade (e.g. bcrypt -> argon2), re-hash and persist the new hash
+    from ..core.security import needs_rehash
+
+    if needs_rehash(user.password_hash):
+        user.password_hash = get_password_hash(form_data.password)
+        db.add(user)
+        await db.commit()
+
     # create tokens
     access = create_access_token(str(user.id))
     refresh = create_refresh_token(str(user.id))

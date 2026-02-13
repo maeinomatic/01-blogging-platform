@@ -13,3 +13,31 @@ yarn-error.log*
 .next/
 out/
 .cache/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+*.egg
+
+# Local env files
+.env.local
+.env.*.local
+.env
+
+# OS / Editor
+Thumbs.db
+.DS_Store

@@ -6,16 +6,27 @@ from jose import JWTError, jwt
 
 from .config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use Argon2 as the single password hashing scheme (no existing users to migrate).
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
+    """Verify password (returns True/False). Use `pwd_context.needs_update` in
+    the login flow to perform automatic re-hashing when the algorithm or
+    parameters are outdated.
+    """
     return pwd_context.verify(plain, hashed)
 
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
+
+def needs_rehash(hashed: str) -> bool:
+    """Return True when the stored hash should be upgraded to the current
+    preferred algorithm/params.
+    """
+    return pwd_context.needs_update(hashed)
 
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
