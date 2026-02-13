@@ -6,8 +6,12 @@ from jose import JWTError, jwt
 
 from .config import settings
 
-# Use Argon2 as the single password hashing scheme (no existing users to migrate).
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+# Use Argon2 as the preferred password hashing scheme, while still accepting
+# legacy bcrypt hashes so they can be verified and transparently re-hashed.
+pwd_context = CryptContext(
+    schemes=["argon2", "bcrypt"],
+    deprecated=["bcrypt"],
+)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
@@ -36,7 +40,7 @@ def create_access_token(subject: str, expires_delta: Optional[timedelta] = None)
 
 def create_refresh_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
     expire = datetime.utcnow() + (expires_delta or timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
-    to_encode = {"sub": subject, "exp": expire}
+    to_encode = {"sub": subject, "exp": expire, "typ": "refresh"}
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
