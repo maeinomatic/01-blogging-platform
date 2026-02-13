@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+sqlalchemy>=1.4
+asyncpg
+alembic
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+pydantic-settings

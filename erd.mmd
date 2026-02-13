@@ -1,0 +1,85 @@
+erDiagram
+    USERS {
+        UUID id PK
+        text email
+        text username
+        text password_hash
+        timestamp created_at
+    }
+
+    POSTS {
+        UUID id PK
+        UUID author_id FK
+        text title
+        text slug
+        text status
+        timestamp published_at
+        text summary
+        text content_html
+        jsonb content_json
+        tsvector search_vector
+        int comments_count
+        int likes_count
+        timestamp created_at
+    }
+
+    COMMENTS {
+        UUID id PK
+        UUID post_id FK
+        UUID author_id FK
+        UUID parent_id FK
+        text content
+        timestamp created_at
+    }
+
+    TAGS {
+        UUID id PK
+        text name
+        text slug
+    }
+
+    POST_TAGS {
+        UUID post_id FK
+        UUID tag_id FK
+    }
+
+    POST_LIKES {
+        UUID id PK
+        UUID user_id FK
+        UUID post_id FK
+        timestamp created_at
+    }
+
+    BOOKMARKS {
+        UUID id PK
+        UUID user_id FK
+        UUID post_id FK
+        timestamp created_at
+    }
+
+    MEDIA {
+        UUID id PK
+        UUID uploader_id FK
+        text url
+        jsonb meta
+    }
+
+    REFRESH_TOKENS {
+        UUID id PK
+        UUID user_id FK
+        text token_hash
+        timestamp expires_at
+    }
+
+    USERS ||--o{ POSTS : "authors"
+    POSTS ||--o{ COMMENTS : "has"
+    USERS ||--o{ COMMENTS : "authors"
+    POSTS ||--o{ POST_TAGS : "tagged"
+    TAGS ||--o{ POST_TAGS : "in"
+    USERS ||--o{ POST_LIKES : "likes"
+    POSTS ||--o{ POST_LIKES : "liked_by"
+    USERS ||--o{ BOOKMARKS : "bookmarks"
+    POSTS ||--o{ BOOKMARKS : "bookmarked_by"
+    USERS ||--o{ REFRESH_TOKENS : "sessions"
+    USERS ||--o{ MEDIA : "uploads"
+    POSTS }|..|{ MEDIA : "references"
