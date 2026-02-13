@@ -34,11 +34,11 @@ A full-stack blogging application with user authentication, rich text editor, co
 See `ONBOARDING.md` for complete, platform-specific developer onboarding (venv, Docker, migrations, helper scripts, and troubleshooting).
 
 Quick links:
-- Start backend (dev): `uvicorn server.main:app --reload`
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- Health check: `http://127.0.0.1:8000/health`
+- Start backend (dev): `uvicorn server.main:app --reload --port 5000`
+- Swagger UI: `http://127.0.0.1:5000/docs`
+- Health check: `http://127.0.0.1:5000/health`
 
-For full step‑by‑step commands and troubleshooting, open `ONBOARDING.md`.
+For full step‑by‑step commands and troubleshooting, open `ONBOARDING.md`. 
 
 ## API Endpoints
 - If `docker-compose up -d` fails, run `docker-compose logs db` to see startup errors or the healthcheck output.

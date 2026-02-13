@@ -19,8 +19,8 @@ Note: the project uses PostgreSQL (local Docker) and FastAPI (backend).
 - Start DB: `docker-compose up -d`
 - Create venv & install deps: `python -m venv .venv` → activate → `pip install -r requirements.txt`
 - Run migrations: `python -m alembic upgrade head`
-- Start backend: `./scripts/run-backend-win.ps1` (Windows) or `uvicorn server.main:app --reload` (macOS/Linux)
-- Open Swagger UI: `http://127.0.0.1:8000/docs`
+- Start backend: `./scripts/run-backend-win.ps1` (Windows) or `uvicorn server.main:app --reload --port 5000` (macOS/Linux)
+- Open Swagger UI: `http://127.0.0.1:5000/docs`
 
 ---
 
@@ -93,10 +93,10 @@ cd client && npm install && npm start
 ---
 
 ## Where to find the API (local dev)
-- Swagger UI (interactive docs): http://127.0.0.1:8000/docs
-- ReDoc: http://127.0.0.1:8000/redoc
-- Health check: http://127.0.0.1:8000/health
-- OpenAPI JSON: http://127.0.0.1:8000/openapi.json
+- Swagger UI (interactive docs): http://127.0.0.1:5000/docs
+- ReDoc: http://127.0.0.1:5000/redoc
+- Health check: http://127.0.0.1:5000/health
+- OpenAPI JSON: http://127.0.0.1:5000/openapi.json
 
 Use Swagger UI to exercise endpoints (register/login, posts, comments).
 
@@ -140,7 +140,7 @@ Notes: Alembic is wired to SQLModel metadata in `alembic/env.py`.
 ## Useful commands (copy/paste)
 - Start DB: `docker-compose up -d`
 - Apply migrations: `python -m alembic upgrade head`
-- Start backend (dev): `python -m uvicorn server.main:app --reload --port 8000`
+- Start backend (dev): `python -m uvicorn server.main:app --reload --port 5000`
 - Run tests: `pytest`
 - Format: `black .` — Lint: `ruff .`
 
