@@ -53,9 +53,12 @@ A full-stack blogging platform with user authentication, rich text editor, comme
 7. Start backend: `uvicorn server.main:app --reload --port 5000`
 
 ### Important Environment Variables
-- `DATABASE_URL`: PostgreSQL connection string (default: `postgresql+asyncpg://postgres:postgres@db:5432/blogdb`)
-- `JWT_SECRET`: Secret key for JWT token generation (must be set securely)
-- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`: Database credentials
+- `DATABASE_URL`: PostgreSQL connection string 
+  - **Local development (backend on host)**: `postgresql+asyncpg://postgres:postgres@localhost:5432/blogdb`
+  - **Docker Compose (backend in container)**: `postgresql+asyncpg://postgres:postgres@db:5432/blogdb`
+  - ⚠️ **WARNING**: Default credentials (postgres:postgres) are for local development only. Always use strong, unique credentials for staging and production environments.
+- `JWT_SECRET`: Secret key for JWT token generation (must be set to a secure random string, never use defaults in production)
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`: Database credentials (change defaults for non-local environments)
 
 ## Code Style and Conventions
 
@@ -224,9 +227,14 @@ Once the server is running, access:
 - **IntelliSense/import errors**: Ensure correct Python interpreter is selected (`.venv`) and dependencies are installed
 
 ### Database Connection
-- **Local development**: Backend runs on host, connects to Docker database at `localhost:5432`
+- **Recommended setup (backend on host, database in Docker)**: 
+  - Backend connects to Docker database at `localhost:5432`
+  - Use DATABASE_URL: `postgresql+asyncpg://postgres:postgres@localhost:5432/blogdb`
+- **Alternative setup (both in Docker Compose)**: 
+  - Backend connects using service name `db:5432`
+  - Use DATABASE_URL: `postgresql+asyncpg://postgres:postgres@db:5432/blogdb`
 - **Connection string format**: `postgresql+asyncpg://user:password@host:port/database`
-- **Docker internal**: Use `db` as hostname when backend runs inside Docker Compose
+- The default configuration in `.env.example` assumes backend runs on host, connecting to database in Docker
 
 ## Best Practices When Assisting
 
