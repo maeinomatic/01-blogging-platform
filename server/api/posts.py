@@ -127,9 +127,9 @@ async def create_post(
         )
     
     published_at = parse_published_at(payload.published_at)
-    if payload.status == PostStatus.published and published_at is None:
+    if payload.status.value == PostStatus.published.value and published_at is None:
         published_at = get_utc_now()
-    if payload.status != PostStatus.published:
+    if payload.status.value != PostStatus.published.value:
         published_at = None
     
     post = Post(
