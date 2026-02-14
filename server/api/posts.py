@@ -9,7 +9,7 @@ from sqlalchemy import String
 from enum import Enum
 
 from ..core.db import async_session
-from ..core.security import get_current_user_id
+from ..core.security import get_current_user_id, get_utc_now
 from ..models.post import Post
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
@@ -127,17 +127,14 @@ async def create_post(
     
     published_at = parse_published_at(payload.published_at)
     if payload.status == PostStatus.published and published_at is None:
-        published_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        published_at = get_utc_now()
     if payload.status != PostStatus.published:
         published_at = None
-
-    # Calculate slug before creating the post to avoid temporary invalid state
-    slug = build_post_slug(payload.title, None)  # We'll use a temporary value first
     
     post = Post(
         author_id=payload.author_id,
         title=payload.title,
-        slug=slug,
+        slug="",  # Temporary value; updated after post.id is generated
         status=payload.status.value,
         published_at=published_at,
         summary=payload.summary,
@@ -229,11 +226,11 @@ async def update_post(
         setattr(post, key, value)
 
     if post.status == PostStatus.published.value and post.published_at is None:
-        post.published_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        post.published_at = get_utc_now()
     if post.status != PostStatus.published.value:
         post.published_at = None
 
-    post.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    post.updated_at = get_utc_now()
     db.add(post)
     await db.commit()
     await db.refresh(post)

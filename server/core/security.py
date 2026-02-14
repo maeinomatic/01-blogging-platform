@@ -32,6 +32,12 @@ def needs_rehash(hashed: str) -> bool:
     """
     return pwd_context.needs_update(hashed)
 
+
+def get_utc_now() -> datetime:
+    """Get current UTC datetime without timezone info (naive datetime)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode = {"sub": subject, "exp": expire}
@@ -52,12 +58,13 @@ def decode_token(token: str) -> dict:
         return {}
 
 
-async def get_current_user_id(authorization: str = None) -> str:
-    """Dependency to get the current authenticated user's ID from the Authorization header.
+def get_current_user_id(authorization: str) -> str:
+    """Extract and validate user ID from Authorization header.
     
+    Use as a FastAPI dependency with Header(..., alias="Authorization").
     Raises HTTPException(401) if the token is missing, invalid, or expired.
     """
-    from fastapi import HTTPException, Header
+    from fastapi import HTTPException
     
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing authorization header")

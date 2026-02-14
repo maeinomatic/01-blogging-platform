@@ -5,6 +5,11 @@ from datetime import datetime, timezone
 from sqlmodel import SQLModel, Field
 
 
+def _get_utc_now():
+    """Get current UTC datetime without timezone info (naive datetime)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class UserBase(SQLModel):
     email: str
     username: Optional[str] = None
@@ -18,7 +23,7 @@ class User(UserBase, table=True):
     password_hash: str
     is_active: bool = Field(default=True)
     is_admin: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=_get_utc_now)
     updated_at: Optional[datetime] = None
 
 

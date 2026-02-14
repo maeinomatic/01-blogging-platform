@@ -8,6 +8,11 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 
 
+def _get_utc_now():
+    """Get current UTC datetime without timezone info (naive datetime)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class Post(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     author_id: UUID = Field(foreign_key="user.id")
@@ -21,5 +26,5 @@ class Post(SQLModel, table=True):
     content_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSONB))
     comments_count: int = 0
     likes_count: int = 0
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=_get_utc_now)
     updated_at: Optional[datetime] = None
