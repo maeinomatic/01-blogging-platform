@@ -13,6 +13,7 @@ class Post(SQLModel, table=True):
     author_id: UUID = Field(foreign_key="user.id")
     title: str
     slug: str
+    short_id: Optional[str] = Field(default=None, index=True)
     status: str = "draft"
     published_at: Optional[datetime] = None
     summary: Optional[str] = None
