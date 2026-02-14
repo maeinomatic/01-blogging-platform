@@ -5,12 +5,13 @@ from sqlmodel import select
 from fastapi import Request
 from ..core.db import async_session
 from ..core.security import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
+from ..core.utils import get_utc_now
 from ..models.user import User, UserCreate
 from ..models.refresh_token import RefreshToken
 from ..core.config import settings
 from sqlmodel import SQLModel
 import hashlib
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -65,7 +66,7 @@ async def login(form_data: UserCreate, request: Request, db: AsyncSession = Depe
 
     # persist refresh token (store hash only)
     token_hash = hashlib.sha256(refresh.encode()).hexdigest()
-    expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expires_at = get_utc_now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     rt = RefreshToken(user_id=user.id, token_hash=token_hash, user_agent=request.headers.get("user-agent"), ip=(request.client.host if request.client else None), expires_at=expires_at)
     db.add(rt)
     await db.commit()
@@ -88,14 +89,14 @@ async def refresh_token(payload: RefreshTokenRequest, db: AsyncSession = Depends
     stored = result.one_or_none()
     if not stored or stored.revoked:
         raise HTTPException(status_code=401, detail="Refresh token revoked or not found")
-    if stored.expires_at and stored.expires_at < datetime.utcnow():
+    if stored.expires_at and stored.expires_at < get_utc_now():
         raise HTTPException(status_code=401, detail="Refresh token expired")
 
     # rotate refresh token: revoke old, create new record
     stored.revoked = True
     new_refresh = create_refresh_token(user_id)
     new_hash = hashlib.sha256(new_refresh.encode()).hexdigest()
-    expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expires_at = get_utc_now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     new_rt = RefreshToken(user_id=stored.user_id, token_hash=new_hash, expires_at=expires_at)
     db.add(new_rt)
     await db.commit()

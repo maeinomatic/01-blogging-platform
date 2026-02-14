@@ -9,5 +9,6 @@ class PostLike(SQLModel, table=True):
     post_id: UUID = Field(foreign_key="post.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        schema_extra = {"unique": ["user_id", "post_id"]}
+    model_config = {
+        "json_schema_extra": {"unique": ["user_id", "post_id"]}
+    }
