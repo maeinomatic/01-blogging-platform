@@ -24,9 +24,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
         message = String(json.detail)
       }
     } catch {
-   
+      // Ignore JSON parsing errors and fall back to the default message
+    }
     throw new Error(message)
   }
- }
   return response.json() as Promise<T>
 }

@@ -5,6 +5,14 @@ from datetime import datetime
 from sqlmodel import SQLModel, Field
 
 
+# Import get_utc_now from core utils at module level would create circular import
+# So we define a module-level function that can be used as default_factory
+def _default_created_at():
+    """Default factory for created_at field."""
+    from ..core.utils import get_utc_now
+    return get_utc_now()
+
+
 class UserBase(SQLModel):
     email: str
     username: Optional[str] = None
@@ -18,7 +26,7 @@ class User(UserBase, table=True):
     password_hash: str
     is_active: bool = Field(default=True)
     is_admin: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_default_created_at)
     updated_at: Optional[datetime] = None
 
 
