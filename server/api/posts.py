@@ -5,11 +5,12 @@ from typing import Any, List, Optional
 from datetime import datetime, timezone
 from uuid import UUID
 import re
-from sqlalchemy import String
+from sqlalchemy import String, or_
 from enum import Enum
 
 from ..core.db import async_session
-from ..core.security import get_current_user_id, get_utc_now
+from ..core.security import get_current_user_id
+from ..core.utils import get_utc_now
 from ..models.post import Post
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
@@ -96,7 +97,7 @@ async def list_posts(
     if current_user_id:
         # Authenticated: show published posts + user's own drafts
         q = select(Post).where(
-            (Post.status == PostStatus.published.value) | (Post.author_id == current_user_id)
+            or_(Post.status == PostStatus.published.value, Post.author_id == current_user_id)
         ).order_by(Post.created_at.desc())
     else:
         # Unauthenticated: show only published posts

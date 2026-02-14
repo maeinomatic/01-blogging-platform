@@ -5,6 +5,7 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 
 from .config import settings
+from .utils import get_utc_now
 
 # Use Argon2 as the preferred password hashing scheme, while still accepting
 # legacy bcrypt hashes so they can be verified and transparently re-hashed.
@@ -33,18 +34,15 @@ def needs_rehash(hashed: str) -> bool:
     return pwd_context.needs_update(hashed)
 
 
-def get_utc_now() -> datetime:
-    """Get current UTC datetime without timezone info (naive datetime)."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
+    """Create a JWT access token with timezone-aware expiration."""
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode = {"sub": subject, "exp": expire}
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
 def create_refresh_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
+    """Create a JWT refresh token with timezone-aware expiration."""
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
     to_encode = {"sub": subject, "exp": expire, "typ": "refresh"}
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)

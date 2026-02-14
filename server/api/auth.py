@@ -4,13 +4,14 @@ from sqlmodel import select
 
 from fastapi import Request
 from ..core.db import async_session
-from ..core.security import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token, get_utc_now
+from ..core.security import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
+from ..core.utils import get_utc_now
 from ..models.user import User, UserCreate
 from ..models.refresh_token import RefreshToken
 from ..core.config import settings
 from sqlmodel import SQLModel
 import hashlib
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 

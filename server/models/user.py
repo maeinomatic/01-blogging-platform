@@ -1,13 +1,16 @@
 from typing import Optional
 from uuid import UUID, uuid4
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlmodel import SQLModel, Field
 
 
-def _get_utc_now():
-    """Get current UTC datetime without timezone info (naive datetime)."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+# Import get_utc_now from core utils at module level would create circular import
+# So we define a module-level function that can be used as default_factory
+def _default_created_at():
+    """Default factory for created_at field."""
+    from ..core.utils import get_utc_now
+    return get_utc_now()
 
 
 class UserBase(SQLModel):
@@ -23,7 +26,7 @@ class User(UserBase, table=True):
     password_hash: str
     is_active: bool = Field(default=True)
     is_admin: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=_get_utc_now)
+    created_at: datetime = Field(default_factory=_default_created_at)
     updated_at: Optional[datetime] = None
 
 
