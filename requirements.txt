@@ -5,6 +5,6 @@ sqlalchemy>=1.4
 asyncpg
 alembic
 python-dotenv
-passlib[bcrypt]
+passlib[argon2,bcrypt]
 python-jose[cryptography]
 pydantic-settings
