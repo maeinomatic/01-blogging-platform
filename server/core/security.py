@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from passlib.context import CryptContext
@@ -33,13 +33,13 @@ def needs_rehash(hashed: str) -> bool:
     return pwd_context.needs_update(hashed)
 
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode = {"sub": subject, "exp": expire}
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
 def create_refresh_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
-    expire = datetime.utcnow() + (expires_delta or timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
     to_encode = {"sub": subject, "exp": expire, "typ": "refresh"}
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
@@ -50,3 +50,25 @@ def decode_token(token: str) -> dict:
         return payload
     except JWTError:
         return {}
+
+
+async def get_current_user_id(authorization: str = None) -> str:
+    """Dependency to get the current authenticated user's ID from the Authorization header.
+    
+    Raises HTTPException(401) if the token is missing, invalid, or expired.
+    """
+    from fastapi import HTTPException, Header
+    
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing authorization header")
+    
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header format")
+    
+    token = authorization[7:]  # Remove "Bearer " prefix
+    payload = decode_token(token)
+    
+    if not payload or "sub" not in payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    return payload["sub"]

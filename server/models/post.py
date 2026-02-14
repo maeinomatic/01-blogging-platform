@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlmodel import SQLModel, Field
 from typing import Optional, Any, Dict
@@ -21,5 +21,5 @@ class Post(SQLModel, table=True):
     content_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSONB))
     comments_count: int = 0
     likes_count: int = 0
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at: Optional[datetime] = None

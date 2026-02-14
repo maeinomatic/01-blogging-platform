@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlmodel import SQLModel, Field
 
@@ -18,7 +18,7 @@ class User(UserBase, table=True):
     password_hash: str
     is_active: bool = Field(default=True)
     is_admin: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at: Optional[datetime] = None
 
 
