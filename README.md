@@ -34,7 +34,9 @@ A full-stack blogging application with user authentication, rich text editor, co
 See `ONBOARDING.md` for complete, platform-specific developer onboarding (venv, Docker, migrations, helper scripts, and troubleshooting).
 
 Quick links:
+- Start docker for db (dev): `docker-compose up -d`
 - Start backend (dev): `uvicorn server.main:app --reload --port 5000`
+- Start frontend (dev): `npm run dev`
 - Swagger UI: `http://127.0.0.1:5000/docs`
 - Health check: `http://127.0.0.1:5000/health`
 
