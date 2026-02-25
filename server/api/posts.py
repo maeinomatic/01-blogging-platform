@@ -57,7 +57,7 @@ def parse_published_at(value: datetime | str | None) -> datetime | None:
 class PostCreate(SQLModel):
     author_id: UUID | str
     title: str
-    status: PostStatus = PostStatus.draft
+    status: str = "draft"
     published_at: datetime | str | None = None
     summary: str | None = None
     content_html: str | None = None
@@ -66,7 +66,7 @@ class PostCreate(SQLModel):
 
 class PostUpdate(SQLModel):
     title: str | None = None
-    status: PostStatus | None = None
+    status: str | None = None
     published_at: datetime | str | None = None
     summary: str | None = None
     content_html: str | None = None
@@ -118,35 +118,38 @@ async def create_post(
     The author_id in the payload must match the authenticated user.
     """
     current_user_id = get_current_user_id(authorization)
-    
+
     # Security check: verify author_id matches authenticated user
     if str(payload.author_id) != current_user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cannot create posts on behalf of other users"
         )
-    
+
     published_at = parse_published_at(payload.published_at)
-    if payload.status == PostStatus.published and published_at is None:
+    if payload.status == "published" and published_at is None:
         published_at = get_utc_now()
-    if payload.status != PostStatus.published:
+    if payload.status != "published":
         published_at = None
-    
+
+    # Generate UUID and short_id before constructing Post
+    from uuid import uuid4
+    post_id = uuid4()
+    short_id = str(post_id).split("-")[0]
+    slug = build_post_slug(payload.title, post_id)
+
     post = Post(
+        id=post_id,
         author_id=payload.author_id,
         title=payload.title,
-        slug="",  # Temporary value; updated after post.id is generated
-        status=payload.status.value,
+        slug=slug,
+        short_id=short_id,
+        status=payload.status,
         published_at=published_at,
         summary=payload.summary,
         content_html=payload.content_html,
         content_json=payload.content_json,
     )
-
-    # Update slug with actual post ID after it's generated
-    post.slug = build_post_slug(post.title, post.id)
-    # persist short_id (first UUID segment) for fast indexed lookup
-    post.short_id = str(post.id).split("-")[0]
 
     db.add(post)
     await db.commit()

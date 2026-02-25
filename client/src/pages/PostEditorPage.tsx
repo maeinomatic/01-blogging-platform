@@ -22,6 +22,9 @@ function PostEditorPage({ mode, userId }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [loadedPost, setLoadedPost] = useState<Post | null>(null)
 
+  // Get access token from localStorage (or your auth context)
+  const token = localStorage.getItem('blog_access_token')
+
   useEffect(() => {
     if (mode !== 'edit') {
       return
@@ -86,7 +89,7 @@ function PostEditorPage({ mode, userId }: Props) {
 
     try {
       if (mode === 'create') {
-        const created = await apiRequest<Post>('/api/posts/', { method: 'POST', body: payload })
+        const created = await apiRequest<Post>('/api/posts/', { method: 'POST', body: payload, token })
         navigate(`/posts/${created.id.split('-')[0]}-${created.slug}`)
       } else {
         const idToUse = postId ?? loadedPost?.id
@@ -94,7 +97,7 @@ function PostEditorPage({ mode, userId }: Props) {
           throw new Error('Missing post id')
         }
 
-        const updated = await apiRequest<Post>(`/api/posts/${idToUse}`, { method: 'PUT', body: payload })
+        const updated = await apiRequest<Post>(`/api/posts/${idToUse}`, { method: 'PUT', body: payload, token })
         navigate(`/posts/${updated.id.split('-')[0]}-${updated.slug}`)
       }
     } catch (err) {
